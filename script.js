@@ -3,7 +3,7 @@ window.addEventListener("load", function() {
     var context = timerCanvas.getContext("2d");
     var timerVideo = document.querySelector(".renderedTimer");
     var blocksLogo = new Image();
-    var peer = new Peer();
+    var peer = new Peer(null, {debug: 2});
     var openConnections = [];
 
     var endTime = null;
@@ -96,6 +96,10 @@ window.addEventListener("load", function() {
         } else {
             window.history.replaceState(null, document.title, `${window.location.href.split("?")[0]}?peerId=${encodeURIComponent(peer.id)}`);
         }
+    });
+
+    peer.on("error", function(error) {
+        document.querySelector(".ownPeerId").textContent = error;
     });
 
     document.querySelector(".connectButton").addEventListener("click", function() {
