@@ -20,7 +20,7 @@ window.addEventListener("load", function() {
     }
 
     function writeText(text, x, y, size = 32, colour = "white") {
-        context.font = `${size}px "BBC Reith Sans"`;
+        context.font = `${size}px "ReithSans"`;
         context.fillStyle = colour;
         context.textBaseline = "middle";
         context.textAlign = "center";
@@ -34,7 +34,7 @@ window.addEventListener("load", function() {
 
         if (endTime != null) {
             var timeLeft = endTime - Date.now();
-            var timeString = new Date(Math.abs(timeLeft)).toISOString().substring(14, 19);
+            var timeString = new Date(Math.abs(timeLeft < 0 ? timeLeft - 1_000 : timeLeft)).toISOString().substring(14, 19);
         
             if (timeLeft >= 0) {
                 timeDisplay = `-${timeString}`;
@@ -49,8 +49,16 @@ window.addEventListener("load", function() {
         
         context.drawImage(blocksLogo, 16, 16, 128, 128 * (blocksLogo.height / blocksLogo.width));
 
+        var timeColour = "white";
+
+        if (timeLeft < 1_000) {
+            timeColour = "red";
+        } else if (timeLeft < 31_000) {
+            timeColour = "yellow";
+        }
+
         writeText(currentTimeDisplay, timerCanvas.width - 80, 42, 48);
-        writeText(timeDisplay, timerCanvas.width / 2, timerCanvas.height / 2, 128, timeLeft < 0 ? "red" : "white");
+        writeText(timeDisplay, timerCanvas.width / 2, timerCanvas.height / 2, 128, timeColour);
         writeText(note || "", timerCanvas.width / 2, timerCanvas.height - 64, 48);
 
         requestAnimationFrame(render);
@@ -59,7 +67,11 @@ window.addEventListener("load", function() {
     function connect(peerId) {
         var connection = peer.connect(peerId);
 
+        document.querySelector(".connectionMessage").textContent = "Connecting...";
+
         connection.on("open", function() {
+            document.querySelector(".connectionMessage").textContent = "Connected to host!";
+
             openConnections.push(connection);
         });
     }
@@ -73,15 +85,26 @@ window.addEventListener("load", function() {
         });
     }
 
-    document.querySelector(".saveButton").addEventListener("click", function() {
-        note = document.querySelector("#note").value;
-        endTime = new Date(document.querySelector("#endDate").value);
+    document.querySelector("#applyEndTimeButton").addEventListener("click", function() {
+        endTime = new Date(document.querySelector("#endTime").value);
 
         sync();
     });
 
-    document.querySelector(".clearDateButton").addEventListener("click", function() {
+    document.querySelector("#applyNoteButton").addEventListener("click", function() {
+        note = document.querySelector("#note").value;
+
+        sync();
+    });
+
+    document.querySelector("#clearEndTimeButton").addEventListener("click", function() {
         endTime = null;
+
+        sync();
+    });
+
+    document.querySelector("#clearNoteButton").addEventListener("click", function() {
+        note = "";
 
         sync();
     });
@@ -99,14 +122,16 @@ window.addEventListener("load", function() {
     });
 
     peer.on("error", function(error) {
-        document.querySelector(".ownPeerId").textContent = error;
+        document.querySelector(".connectionMessage").textContent = error;
     });
 
-    document.querySelector(".connectButton").addEventListener("click", function() {
+    document.querySelector("#connectButton").addEventListener("click", function() {
         connect(document.querySelector("#connectPeerId").value);
     });
 
     peer.on("connection", function(connection) {
+        document.querySelector(".connectionMessage").textContent = "Connected to controller!";
+
         connection.on("data", function(data) {
             endTime = data.endTime != null ? new Date(data.endTime) : null;
             note = data.note;
@@ -116,7 +141,7 @@ window.addEventListener("load", function() {
     blocksLogo.src = "logo-white.svg";
     timerVideo.srcObject = timerCanvas.captureStream();
 
-    document.querySelector("#endDate").value = new Date().toISOString().slice(0, 16);
+    document.querySelector("#endTime").value = new Date().toISOString().slice(0, 16);
 
     render();
 });
