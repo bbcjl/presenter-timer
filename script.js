@@ -34,7 +34,7 @@ window.addEventListener("load", function() {
 
         if (endTime != null) {
             var timeLeft = endTime - Date.now();
-            var timeString = new Date(Math.abs(timeLeft < 0 ? timeLeft - 1_000 : timeLeft)).toISOString().substring(14, 19);
+            var timeString = new Date(Math.abs(timeLeft >= 0 ? timeLeft + 1_000 : timeLeft)).toISOString().substring(14, 19);
         
             if (timeLeft >= 0) {
                 timeDisplay = `-${timeString}`;
@@ -51,9 +51,9 @@ window.addEventListener("load", function() {
 
         var timeColour = "white";
 
-        if (timeLeft < 1_000) {
+        if (timeLeft < 0) {
             timeColour = "red";
-        } else if (timeLeft < 31_000) {
+        } else if (timeLeft < 30_000) {
             timeColour = "yellow";
         }
 
